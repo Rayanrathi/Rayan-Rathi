@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMSD 3D Tracker Mock</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 {
+      color: #004d7a;
+    }
+    .map-area {
+      position: relative;
+      margin: 2rem auto;
+      width: 800px;
+      height: 500px;
+      background: linear-gradient(45deg, #e3f2fd, #ffffff);
+      border: 2px solid #004d7a;
+      border-radius: 10px;
+    }
+    .point {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: red;
+    }
+    .target {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: green;
+    }
+    .room, .hallway {
+      position: absolute;
+      background: #bbdefb;
+      border: 1px solid #2196f3;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #000;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+    .distance {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>SMSD Walkthrough 3D Tracker (Mock Demo)</h1>
+  <p>This mock shows your movement through a school layout and your distance to a specific classroom.</p>
+  <button onclick="requestMotion()">Enable Motion Tracking</button>
+  <div class="map-area" id="map">
+    <div class="point" id="point" style="top: 50px; left: 50px;"></div>
+    <div class="target" id="target" style="top: 400px; left: 700px;"></div>
+    <div class="hallway" style="top: 40px; left: 100px; width: 600px; height: 50px;">Main Hallway</div>
+    <div class="hallway" style="top: 150px; left: 100px; width: 600px; height: 50px;">North Hallway</div>
+    <div class="hallway" style="top: 260px; left: 100px; width: 600px; height: 50px;">South Hallway</div>
+    <div class="room" style="top: 100px; left: 100px; width: 100px; height: 40px;">Room A</div>
+    <div class="room" style="top: 100px; left: 220px; width: 100px; height: 40px;">Room B</div>
+    <div class="room" style="top: 210px; left: 100px; width: 100px; height: 40px;">Room C</div>
+    <div class="room" style="top: 210px; left: 220px; width: 100px; height: 40px;">Room D</div>
+    <div class="room" style="top: 320px; left: 700px; width: 80px; height: 40px;">Room Z</div>
+  </div>
+  <div class="distance" id="distanceDisplay">
+    Distance to target: calculating...
+  </div>
+  <script>
+    const point = document.getElementById("point");
+    const target = document.getElementById("target");
+    const display = document.getElementById("distanceDisplay");
+    let x = 50;
+    let y = 50;
+    function calculateDistance() {
+      const px = point.offsetLeft;
+      const py = point.offsetTop;
+      const tx = target.offsetLeft;
+      const ty = target.offsetTop;
+      const dx = tx - px;
+      const dy = ty - py;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      display.innerText = `Distance to Room Z: ${dist.toFixed(2)} px`;
+    }
+    function updatePosition() {
+      point.style.left = `${x}px`;
+      point.style.top = `${y}px`;
+      calculateDistance();
+    }
+    function requestMotion() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === 'granted') {
+              window.addEventListener("deviceorientation", handleOrientation);
+            } else {
+              alert("Motion permission denied.");
+            }
+          })
+          .catch(console.error);
+      } else {
+        window.addEventListener("deviceorientation", handleOrientation);
+      }
+    }
+    function handleOrientation(event) {
+      const threshold = 1.5;
+      const tiltX = event.gamma;
+      const tiltY = event.beta;
+      if (tiltX > threshold) x += 2;
+      if (tiltX < -threshold) x -= 2;
+      if (tiltY > threshold) y += 2;
+      if (tiltY < -threshold) y -= 2;
+      x = Math.max(0, Math.min(x, 780));
+      y = Math.max(0, Math.min(y, 480));
+      updatePosition();
+    }
+    updatePosition();
+  </script>
+</body>
+</html>
